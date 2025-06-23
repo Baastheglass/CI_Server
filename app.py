@@ -1,13 +1,23 @@
 from fastapi import FastAPI, Request
 import uvicorn
+import json
+import subprocess
+import os
+
+def pull_or_clone(clone_url, repo_name, branch, target_path):
+    # Full path where repo will be stored
+    repo_dir = os.path.join(target_path, repo_name)
+
+    if os.path.exists(repo_dir):
+        # Repo exists, pull latest
+        print(f"Pulling latest code in {repo_dir}")
+        subprocess.run(["git", "-C", repo_dir, "pull"], check=True)
+    else:
+        # Repo doesn't exist, clone it
+        print(f"Cloning into {repo_dir}")
+        subprocess.run(["git", "clone", "--branch", branch, clone_url, repo_dir], check=True)
 
 app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
 
 @app.post("/webhook")
 async def webhook(request: Request):
@@ -22,11 +32,23 @@ async def webhook(request: Request):
     print(f"Payload: {payload}")
 
     # Optionally: handle specific event types
-    if event_type == "push":
-        # do something with the push payload
+    
+    if event_type == "push" and payload['ref'].split('/')[-1] == "main":
+        repo_name = payload['repository']['name']
+        with open('config.json') as f:
+            config = json.load(f)
+        for _, repo_info in config['repositories'].items():
+            print(repo_info)
+            if(repo_info['name'] == repo_name):
+                path = repo_info['path']
+                clone_url = payload['repository']['clone_url']
+                repo_name = payload['repository']['name']
+                branch = payload['ref'].split('/')[-1]  
+                pull_or_clone(clone_url, repo_name, branch, path)
         print("Push event received!")
-
-    return {"status": "ok"}
+    else:
+        print("Main not found!")
+    
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload = True)

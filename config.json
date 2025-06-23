@@ -1,0 +1,27 @@
+{
+  "repositories": {
+    "repo1": {
+      "name": "Sustainable_Shopping",
+      "description": "This is the first repository.",
+      "path": "/",
+      "branches": [
+        {
+          "branchname": "main",
+          "events": ["push", "pull_request"],
+          "actions": {
+            "action1": {
+              "name": "build",
+              "description": "Build the project",
+              "command": "git pull && npm install && npm run build"
+            },
+            "action2": {
+              "name": "test",
+              "description": "Run tests",
+              "command": "git pull && bash deploy.sh"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
