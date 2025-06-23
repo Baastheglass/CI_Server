@@ -4,7 +4,7 @@ import json
 import subprocess
 import os
 
-def run_commands(clone_url, repo_name, branch, target_path, actions):
+def run_commands(clone_url, repo_name, branch, target_path, commands):
     # Full path where repo will be stored
     repo_dir = os.path.join(target_path, repo_name)
     for command in commands:
@@ -17,8 +17,9 @@ def run_commands(clone_url, repo_name, branch, target_path, actions):
                 # Repo doesn't exist, clone it
                 print(f"Cloning into {repo_dir}")
                 subprocess.run(["git", "clone", "--branch", branch, clone_url, repo_dir], check=True)
-        else:
-            subprocess.run(command)
+        else:    
+            print(f"Running shell command: {command}")
+            subprocess.run(command, shell=True, check=True, cwd=repo_dir)
 
 app = FastAPI()
 
@@ -50,15 +51,11 @@ async def webhook(request: Request):
                 actions = repo_info['branches']['main']['actions']
                 commands = []
                 for _, action_info in actions.items():
-                    for _, comm in action_info['commands'][0].items():
-                        commands.append(comm)
+                    for command in action_info['commands']:
+                        commands.append(command)
                 print(commands) 
-                #pull_or_clone(clone_url, repo_name, branch, path)
+                run_commands(clone_url, repo_name, branch, path, commands)
                 print("Success")
-        print("Push event received!")
-    else:
-        print("Main not found!")
     
-
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload = True)

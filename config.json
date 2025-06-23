@@ -11,12 +11,7 @@
             "action1": {
               "name": "Build",
               "description": "Pull and Build the project",
-              "commands": [
-                {
-                  "command-1": "git pull",
-                  "command-2": "cd front_end/sustainable_shop && npm install"
-                }
-              ]
+              "commands": [ "git pull", "cd front_end/sustainable_shop && npm install"]
             }
           }
         }
